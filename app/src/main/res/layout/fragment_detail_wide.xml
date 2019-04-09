@@ -6,25 +6,31 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="?android:attr/actionBarSize"
+        android:layout_marginTop="?attr/actionBarSize"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:paddingTop="16dp">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="160dp"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <!-- Header: Day, Date -->
             <TextView
                 android:id="@+id/detail_day_textview"
+                style="@style/text_condensed"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/details_day_text_size" />
 
             <TextView
                 android:id="@+id/detail_date_textview"
+                style="@style/text_condensed"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="@dimen/details_date_text_size" />
 
         </LinearLayout>
 
@@ -37,27 +43,40 @@
 
             <TextView
                 android:id="@+id/detail_high_textview"
+                style="@style/text_light"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/black"
+                android:textSize="@dimen/details_high_temp_text_size" />
 
             <TextView
                 android:id="@+id/detail_low_textview"
+                style="@style/text_light"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/details_specs_margin_bottom"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="@dimen/details_low_temp_text_size" />
 
             <!-- Humidity, wind, pressure -->
             <TextView
                 android:id="@+id/detail_humidity_textview"
+                style="@style/DetailsSpecs"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/details_specs_margin_between"
+                android:textAppearance="?android:textAppearanceLarge" />
 
             <TextView
                 android:id="@+id/detail_pressure_textview"
+                style="@style/DetailsSpecs"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/details_specs_margin_between" />
 
             <TextView
                 android:id="@+id/detail_wind_textview"
+                style="@style/DetailsSpecs"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
@@ -70,11 +89,12 @@
 
             <ImageView
                 android:id="@+id/detail_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_width="@dimen/details_icon_dim"
+                android:layout_height="@dimen/details_icon_dim" />
 
             <TextView
                 android:id="@+id/detail_forecast_textview"
+                style="@style/text_condensed"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>

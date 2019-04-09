@@ -1,4 +1,21 @@
 <resources>
-    <dimen name="fab_margin">16dp</dimen>
+
+    <!-- Margins -->
+    <dimen name="today_margin_right">60dp</dimen>
     <dimen name="list_lateral_margin">16dp</dimen>
+    <dimen name="details_specs_margin_bottom">16dp</dimen>
+    <dimen name="details_specs_margin_between">4dp</dimen>
+
+    <!-- Text Sizes -->
+    <dimen name="today_high_temp_text_size">72sp</dimen>
+    <dimen name="today_low_temp_text_size">36sp</dimen>
+    <dimen name="details_day_text_size">24sp</dimen>
+    <dimen name="details_date_text_size">20sp</dimen>
+    <dimen name="details_high_temp_text_size">96sp</dimen>
+    <dimen name="details_low_temp_text_size">36sp</dimen>
+
+    <!-- Icon Dimensions-->
+    <dimen name="details_icon_dim">144dp</dimen>
+
+
 </resources>

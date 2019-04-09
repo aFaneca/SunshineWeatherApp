@@ -16,8 +16,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginLeft="8dp"
-        android:layout_marginTop="?android:attr/actionBarSize"
         android:layout_marginRight="8dp"
+        android:layout_marginTop="?attr/actionBarSize"
         android:orientation="vertical">
 
         <LinearLayout
@@ -27,12 +27,15 @@
 
             <TextView
                 android:id="@+id/detail_day_textview"
+                style="@style/text_condensed"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Today" />
+                android:text="Today"
+                android:textAppearance="?android:textAppearanceLarge"/>
 
             <TextView
                 android:id="@+id/detail_date_textview"
+                style="@style/text_condensed"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="June 24" />
@@ -51,6 +54,7 @@
 
                 <TextView
                     android:id="@+id/detail_high_textview"
+                    style="@style/text_condensed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="21º"
@@ -58,6 +62,7 @@
 
                 <TextView
                     android:id="@+id/detail_low_textview"
+                    style="@style/text_condensed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="8º"
@@ -86,6 +91,7 @@
 
         <TextView
             android:id="@+id/detail_humidity_textview"
+            style="@style/text_condensed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Humidity:" />
@@ -98,6 +104,7 @@
 
         <TextView
             android:id="@+id/detail_pressure_textview"
+            style="@style/text_condensed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Pressure:" />

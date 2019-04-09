@@ -11,7 +11,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ForecastFragment"
-    android:paddingTop="?attr/actionBarSize"
+
     >
 <ListView
     android:id="@+id/forecast_listview"

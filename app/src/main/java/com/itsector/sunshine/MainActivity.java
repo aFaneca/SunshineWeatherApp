@@ -29,8 +29,8 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
         mLocation = Utility.getPreferredLocation(this);
 
         setContentView(R.layout.activity_main);
-        toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        /*toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);*/
         if (findViewById(R.id.weather_detail_container) != null) {
             /* If this view exists in the layout, it means we're dealing with a tablet
             *  which means we'll have a two pane layout*/
@@ -38,6 +38,9 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
 
         } else {
             mTwoPane = false;
+
+            /* Removes unnecessary shadows below the action bar*/
+            getSupportActionBar().setElevation(0f);
         }
 
         ForecastFragment forecastFragment =  ((ForecastFragment)getSupportFragmentManager()

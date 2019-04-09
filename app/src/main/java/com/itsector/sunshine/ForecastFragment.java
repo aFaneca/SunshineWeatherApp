@@ -145,6 +145,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         // Get a reference to the ListView, and attach this adapter to it.
         mListView = (ListView) rootView.findViewById(R.id.forecast_listview);
         mListView.setAdapter(mForecastAdapter);
+        // Automatically select the first element of the list
+
         // We'll call our MainActivity
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -187,15 +189,9 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
     // since we read the location when we create the loader, all we need to do is restart things
-    void onLocationChanged( ) {
+    public void onLocationChanged() {
         updateWeather();
         getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
-    }
-
-    private void updateWeather() {
-        FetchWeatherTask weatherTask = new FetchWeatherTask(getActivity());
-        String location = Utility.getPreferredLocation(getActivity());
-        weatherTask.execute(location);
     }
 
     @Override
@@ -224,6 +220,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
                 locationSetting, System.currentTimeMillis());
 
+
         return new CursorLoader(this.getActivity(),
                 weatherForLocationUri,
                 FORECAST_COLUMNS,
@@ -235,6 +232,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         mForecastAdapter.swapCursor(data);
+        if (isTwoPaneLayout()) {
+            autoSelectFirstItem();
+        }
+
         if (mPosition != ListView.INVALID_POSITION) {
             // If we don't need to restart the loader, and there's a desired position to restore
             // to, do so now.
@@ -251,6 +252,42 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         mUseTodayLayout = useTodayLayout;
         if (mForecastAdapter != null) {
             mForecastAdapter.setUseTodayLayout(mUseTodayLayout);
+        }
+    }
+
+    /**
+     * Asks for the FetchWeatherTask task to refetch de weather data from the API,
+     * based on the currently selected location
+     */
+    private void updateWeather() {
+        FetchWeatherTask weatherTask = new FetchWeatherTask(getActivity());
+        String location = Utility.getPreferredLocation(getActivity());
+        weatherTask.execute(location);
+    }
+
+    /**
+     * Automatically selects the first item in the listView
+     * Make sure to only call this method after the cursor has fully loaded (onLoadFinihed)
+     */
+    private void autoSelectFirstItem() {
+        mListView.performItemClick(mListView.getAdapter().getView(0, null, null),
+                0,
+                mListView.getAdapter().getItemId(0));
+    }
+
+    /**
+     * Checks whether or not we're dealing with a two-paned layout
+     *
+     * @return boolean
+     */
+    private boolean isTwoPaneLayout() {
+        if (getActivity().findViewById(R.id.weather_detail_container) != null) {
+            /* If this view exists in the layout, it means we're dealing with a tablet
+             *  which means we'll have a two pane layout*/
+            return true;
+
+        } else {
+            return false;
         }
     }
 }
