@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
     }
 
     /**
-     * Checks wether the device is using the two-paned layout or not.
+     * Checks whether the device is using the two-paned layout or not.
      * Will try to get that info from the member var mIsTwoPaneLayout (to avoid extra work)
      * If not defined, will look up the answer itself and return it
      *

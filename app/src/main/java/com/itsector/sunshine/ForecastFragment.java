@@ -6,20 +6,13 @@
 package com.itsector.sunshine;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.text.format.Time;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,49 +20,28 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
+
 
 import com.itsector.sunshine.Data.WeatherContract;
 import com.itsector.sunshine.sync.SunshineService;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * A placeholder fragment containing a simple view.
+ * Fragment containing the list view of the forecasts
  */
 public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private ForecastAdapter mForecastAdapter;
 
     private ListView mListView;
-    private int mPosition = ListView.INVALID_POSITION;
-    private boolean mUseTodayLayout;
+    private int mPosition = ListView.INVALID_POSITION; // current position of the selected item
+    private boolean mUseTodayLayout; // should a specific item use the "today" layout?
 
     private static final String SELECTED_KEY = "selected_position";
 
     private static final int FORECAST_LOADER = 0;
-    // For the forecast view we're showing only a small subset of the stored data.
-    // Specify the columns we need.
+
+    /* Columns associated with each forecast item; to allow projection*/
     private static final String[] FORECAST_COLUMNS = {
-            // In this case the id needs to be fully qualified with a table name, since
-            // the content provider joins the location & weather tables in the background
-            // (both have an _id column)
-            // On the one hand, that's annoying.  On the other, you can search the weather table
-            // using the location set by the user, which is only in the Location table.
-            // So the convenience is worth it.
             WeatherContract.WeatherEntry.TABLE_NAME + "." + WeatherContract.WeatherEntry._ID,
             WeatherContract.WeatherEntry.COLUMN_DATE,
             WeatherContract.WeatherEntry.COLUMN_SHORT_DESC,
@@ -81,8 +53,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             WeatherContract.LocationEntry.COLUMN_COORD_LONG
     };
 
-    // These indices are tied to FORECAST_COLUMNS.  If FORECAST_COLUMNS changes, these
-    // must change.
+    /* Indices associated with each of the columns referred above */
     static final int COL_WEATHER_ID = 0;
     static final int COL_WEATHER_DATE = 1;
     static final int COL_WEATHER_DESC = 2;
@@ -111,7 +82,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Add this line in order for this fragment to handle menu events.
+
+        /* So that the fragment can handle menu events */
         setHasOptionsMenu(true);
     }
 
@@ -122,9 +94,6 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
             updateWeather();
@@ -136,18 +105,17 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-        // The ForecastAdapter will take data from a source and
-        // use it to populate the ListView it's attached to.
-        mForecastAdapter = new ForecastAdapter(getActivity(), null, 0);
-
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        // Get a reference to the ListView, and attach this adapter to it.
+        mForecastAdapter = new ForecastAdapter(getActivity(), null, 0);
+        /* Get a reference to the ListView, and attach this adapter to it. */
         mListView = (ListView) rootView.findViewById(R.id.forecast_listview);
         mListView.setAdapter(mForecastAdapter);
+
+        /* In order to be able to highlight the currently selected item */
         mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        // We'll call our MainActivity
+
+        /* Handling item clicks in the list*/
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
@@ -157,6 +125,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 if (cursor != null) {
                     String locationSetting = Utility.getPreferredLocation(getActivity());
+
+                    /* Trigger the onItemSelected callback */
                     ((Callback) getActivity())
                             .onItemSelected(WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
                                     locationSetting, cursor.getLong(COL_WEATHER_DATE)
@@ -166,29 +136,25 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             }
         });
 
-        // If there's instance state, mine it for useful information.
-        // The end-goal here is that the user never knows that turning their device sideways
-        // does crazy lifecycle related things.  It should feel like some stuff stretched out,
-        // or magically appeared to take advantage of room, but data or place in the app was never
-        // actually *lost*.
+        /* Check if info was persisted regarding a potencial already selected item
+        (e.g. before a screen rotation) */
         if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
-            // The listview probably hasn't even been populated yet.  Actually perform the
-            // swapout in onLoadFinished.
+            /* This change will have an effect once onLoadFinished checks for this variable's value */
             mPosition = savedInstanceState.getInt(SELECTED_KEY);
         }
 
         mForecastAdapter.setUseTodayLayout(mUseTodayLayout);
-
         return rootView;
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
+        /* Initialize the loader */
         getLoaderManager().initLoader(FORECAST_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
     }
 
-    // since we read the location when we create the loader, all we need to do is restart things
+    /* since we read the location when we create the loader, all we need to do is restart things */
     public void onLocationChanged() {
         updateWeather();
         getLoaderManager().restartLoader(FORECAST_LOADER, null, this);
@@ -196,9 +162,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        // When tablets rotate, the currently selected list item needs to be saved.
-        // When no item is selected, mPosition will be set to Listview.INVALID_POSITION,
-        // so check for that before storing.
+        /* Check if a position is selected and, if so, persist that information */
         if (mPosition != ListView.INVALID_POSITION) {
             outState.putInt(SELECTED_KEY, mPosition);
         }
@@ -207,16 +171,12 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        // This is called when a new Loader needs to be created.  This
-        // fragment only uses one loader, so we don't care about checking the id.
-
-        // To only show current and future dates, filter the query to return weather only for
-        // dates after or including today.
-
-        // Sort order:  Ascending, by date.
+        /* Sort order:  Ascending, by date. */
         String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
 
         String locationSetting = Utility.getPreferredLocation(getActivity());
+
+        /* Only get dates from today onwards*/
         Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
                 locationSetting, System.currentTimeMillis());
 
@@ -231,15 +191,19 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        /* Replace the list with the new cursor of data */
         mForecastAdapter.swapCursor(data);
-        if (isTwoPaneLayout()) {
-            autoSelectFirstItem();
-        }
 
+        /* If there's already an item previously selected (e.g. before a screen rotation) */
         if (mPosition != ListView.INVALID_POSITION) {
-            // If we don't need to restart the loader, and there's a desired position to restore
-            // to, do so now.
+           /* Automatically scroll the list view to that position, if needed */
             mListView.smoothScrollToPosition(mPosition);
+        }else{
+            /* If there isn't already a position defined and we're displaying a two-paned layout */
+            if (isTwoPaneLayout()) {
+                /* Automatically select the first item in the list (which represents today's forecast */
+                autoSelectFirstItem();
+            }
         }
     }
 
@@ -260,10 +224,6 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
      * refetching it from the API
      */
     private void updateWeather() {
-        /*FetchWeatherTask weatherTask = new FetchWeatherTask(getActivity());
-        String location = Utility.getPreferredLocation(getActivity());
-        weatherTask.execute(location);*/
-
         Intent intent = new Intent(getActivity(), SunshineService.class);
         intent.putExtra(SunshineService.LOCATION_QUERY_EXTRA,
                 Utility.getPreferredLocation(getActivity()));
@@ -272,7 +232,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     /**
      * Automatically selects the first item in the listView
-     * Make sure to only call this method after the cursor has fully loaded (onLoadFinihed)
+     * Make sure to only call this method after the cursor has fully loaded (e.g. onLoadFinihed)
      */
     private void autoSelectFirstItem() {
         mListView.performItemClick(mListView.getAdapter().getView(0, null, null),
@@ -282,7 +242,6 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     /**
      * Checks whether or not we're dealing with a two-paned layout
-     *
      * @return boolean
      */
     private boolean isTwoPaneLayout() {

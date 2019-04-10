@@ -15,6 +15,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * A collection of helper methods
+ */
 public class Utility {
 
     // Format used for storing dates in the database.  ALso used for converting those strings
@@ -108,6 +111,12 @@ public class Utility {
         return monthDayString;
     }
 
+    /**
+     * Returns a string representation of the Preferred Location, defined by the user.
+     * If none is defined, returns the default value (pref_location_default)
+     * @param context
+     * @return the preferred location (String)
+     */
     public static String getPreferredLocation(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String preferredLocation = prefs.getString(context.getString(R.string.pref_location_key),
@@ -116,6 +125,12 @@ public class Utility {
         return preferredLocation;
     }
 
+    /**
+     * Checks the SharedPreferences for the user preferences regarding the temperature units
+     * ( Metric or Imperial)
+     * @param context
+     * @return boolean
+     */
     public static boolean isMetric(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return prefs.getString(context.getString(R.string.pref_unit_key),
@@ -123,6 +138,12 @@ public class Utility {
                 .equals(context.getString(R.string.pref_units_metric));
     }
 
+    /**
+     * Returns a string representation of the provided temperature value
+     * @param temperature
+     * @param isMetric
+     * @return the formatted string
+     */
     public static String formatTemperature(double temperature, boolean isMetric) {
         double temp;
         if (!isMetric) {
@@ -134,11 +155,14 @@ public class Utility {
         return String.format("%.0fº", temp);
     }
 
-    static String formatDate(long dateInMillis) {
-        Date date = new Date(dateInMillis);
-        return DateFormat.getDateInstance().format(date);
-    }
 
+    /**
+     * Returns a formatted representation of the wind conditions
+     * @param context
+     * @param windSpeed
+     * @param degrees
+     * @return the formatted string
+     */
     public static String getFormattedWind(Context context, float windSpeed, float degrees) {
         int windFormat;
         if (Utility.isMetric(context)) {

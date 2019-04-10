@@ -12,7 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * A placeholder fragment containing a simple view.
+ * Fragment associated with the Settings Activity
  */
 public class SettingsActivityFragment extends Fragment {
 
