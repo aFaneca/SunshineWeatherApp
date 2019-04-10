@@ -16,28 +16,22 @@ import android.text.format.Time;
  */
 public class WeatherContract {
 
-    // The "Content authority" is a name for the entire content provider, similar to the
-    // relationship between a domain name and its website.  A convenient string to use for the
-    // content authority is the package name for the app, which is guaranteed to be unique on the
-    // device.
+    /* Unique string to identify the content provider */
     public static final String CONTENT_AUTHORITY = "com.itsector.sunshine";
 
-    // Use CONTENT_AUTHORITY to create the base of all URI's which apps will use to contact
-    // the content provider.
+    /* Base URI through which the Content Provider is accessible */
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
-    // Possible paths (appended to base content URI for possible URI's)
-    // For instance, content://com.example.android.sunshine.app/weather/ is a valid path for
-    // looking at weather data. content://com.example.android.sunshine.app/givemeroot/ will fail,
-    // as the ContentProvider hasn't been given any information on what to do with "givemeroot".
-    // At least, let's hope not.  Don't be that dev, reader.  Don't be that dev.
+    /* Possible paths */
     public static final String PATH_WEATHER = "weather";
     public static final String PATH_LOCATION = "location";
 
-    // To make it easy to query for the exact date, we normalize all dates that go into
-    // the database to the start of the the Julian day at UTC.
+    /**
+     * Normalizes the start date to the beginning of the (UTC) day
+     * @param startDate
+     * @return the normalized date
+     */
     public static long normalizeDate(long startDate) {
-        // normalize the start date to the beginning of the (UTC) day
         Time time = new Time();
         time.set(startDate);
         int julianDay = Time.getJulianDay(startDate, time.gmtoff);
@@ -47,15 +41,19 @@ public class WeatherContract {
     /* Inner class that defines the table contents of the location table */
     public static final class LocationEntry implements BaseColumns {
 
+        /* Specific URI path to this table */
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_LOCATION).build();
 
+        /* When we expect the cursor to contain 0-many items*/
         public static final String CONTENT_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_LOCATION;
+
+        /* When we expect the cursor to contain 1 item */
         public static final String CONTENT_ITEM_TYPE =
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_LOCATION;
 
-        // Table name
+        /* Table name */
         public static final String TABLE_NAME = "location";
 
         // The location setting string is what will be sent to openweathermap
@@ -71,6 +69,11 @@ public class WeatherContract {
         public static final String COLUMN_COORD_LAT = "coord_lat";
         public static final String COLUMN_COORD_LONG = "coord_long";
 
+        /**
+         * Returns an URI pointing to a location associated with a specific ID
+         * @param id
+         * @return the specified URI
+         */
         public static Uri buildLocationUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
@@ -79,14 +82,19 @@ public class WeatherContract {
     /* Inner class that defines the table contents of the weather table */
     public static final class WeatherEntry implements BaseColumns {
 
+        /* Specific URI path to this table */
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_WEATHER).build();
 
+        /* When we expect the cursor to contain 0-many items*/
         public static final String CONTENT_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_WEATHER;
+
+        /* When we expect the cursor to contain 1 item */
         public static final String CONTENT_ITEM_TYPE =
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_WEATHER;
 
+        /* Table name */
         public static final String TABLE_NAME = "weather";
 
         // Column with the foreign key into the location table.
@@ -116,17 +124,31 @@ public class WeatherContract {
         // Degrees are meteorological degrees (e.g, 0 is north, 180 is south).  Stored as floats.
         public static final String COLUMN_DEGREES = "degrees";
 
+        /**
+         * Returns an URI pointing to a weather forecast item associated with a specific ID
+         * @param id
+         * @return the specified URI
+         */
         public static Uri buildWeatherUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
-        /*
-            Student: This is the buildWeatherLocation function you filled in.
+        /**
+         * Returns an URI pointing to weather forecast items associated with a specific location
+         * @param locationSetting
+         * @return the specified URI
          */
         public static Uri buildWeatherLocation(String locationSetting) {
             return CONTENT_URI.buildUpon().appendPath(locationSetting).build();
         }
 
+        /**
+         * Returns an URI pointing to weather forecast item associated with
+         * a specific location & startDate
+         * @param locationSetting
+         * @param startDate
+         * @return the specified URI
+         */
         public static Uri buildWeatherLocationWithStartDate(
                 String locationSetting, long startDate) {
             long normalizedDate = normalizeDate(startDate);
@@ -134,19 +156,41 @@ public class WeatherContract {
                     .appendQueryParameter(COLUMN_DATE, Long.toString(normalizedDate)).build();
         }
 
+        /**
+         * Returns an URI pointing to weather forecast item associated with
+         * a specific location & date
+         * @param locationSetting
+         * @param date
+         * @return the specified URI
+         */
         public static Uri buildWeatherLocationWithDate(String locationSetting, long date) {
             return CONTENT_URI.buildUpon().appendPath(locationSetting)
                     .appendPath(Long.toString(normalizeDate(date))).build();
         }
 
+        /**
+         * Extracts the location setting from a URI
+         * @param uri
+         * @return the specified location setting
+         */
         public static String getLocationSettingFromUri(Uri uri) {
             return uri.getPathSegments().get(1);
         }
 
+        /**
+         * Extracts the date from a URI
+         * @param uri
+         * @return the specified date
+         */
         public static long getDateFromUri(Uri uri) {
             return Long.parseLong(uri.getPathSegments().get(2));
         }
 
+        /**
+         * Extracts the start date from a URI
+         * @param uri
+         * @return the specified start date
+         */
         public static long getStartDateFromUri(Uri uri) {
             String dateString = uri.getQueryParameter(COLUMN_DATE);
             if (null != dateString && dateString.length() > 0)
@@ -157,8 +201,7 @@ public class WeatherContract {
 
         /**
          * Returns just the selection part of the weather query from a normalized today value.
-         * This is used to get a weather forecast from today's date. To make this easy to use
-         * in compound selection, we embed today's date as an argument in the query.
+         * This is used to get a weather forecast from today's date.
          *
          * @return The selection part of the weather query for today onwards
          */
