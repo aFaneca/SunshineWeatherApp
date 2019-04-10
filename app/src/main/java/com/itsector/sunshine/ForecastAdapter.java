@@ -28,7 +28,7 @@ public class ForecastAdapter extends CursorAdapter {
     private static final int VIEW_TYPE_FUTURE_DAY = 1;
     private static final int VIEW_TYPE_COUNT = 2;
 
-    // Flag to determine if we want to use a separate view for "today".
+    /* Flag to determine if we want to use a separate view for "today" */
     private boolean mUseTodayLayout = true;
 
     /**
@@ -46,51 +46,47 @@ public class ForecastAdapter extends CursorAdapter {
     public int getViewTypeCount() {
         return VIEW_TYPE_COUNT;
     }
-    /**
-     * Prepare the weather high/lows for presentation.
-     */
-    private String formatHighLows(double high, double low) {
-        boolean isMetric = Utility.isMetric(mContext);
-        String highLowStr = Utility.formatTemperature(high, isMetric) + "/" + Utility.formatTemperature(low, isMetric);
-        return highLowStr;
-    }
-
 
     /**
      * Generates the view
      */
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        // Choose the layout type
+        /* Getting the view type */
         int viewType = getItemViewType(cursor.getPosition());
         int layoutID = -1;
-        // TODO: Determine layoutId from viewType
 
+        /* Choosing the layout for that view type */
         if (viewType == VIEW_TYPE_TODAY) {
             layoutID = R.layout.list_item_forecast_today;
         } else if (viewType == VIEW_TYPE_FUTURE_DAY) {
             layoutID = R.layout.list_item_forecast;
         }
 
+        /* Inflate the specified layout */
         View view = LayoutInflater.from(context).inflate(layoutID, parent, false);
+
+        /* Create a view holder to facilitate the management of the views in the layout */
         ViewHolder viewHolder = new ViewHolder(view);
         view.setTag(viewHolder);
 
         return view;
     }
 
-    /*
-        This is where we fill-in the views with the contents of the cursor.
+    /**
+     * Binds each view inside the main view with the contents from the cursor
+     * @param view (main view)
+     * @param context
+     * @param cursor
      */
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-
-        int weatherID = cursor.getInt(ForecastFragment.COL_WEATHER_ID);
-
         ViewHolder viewHolder = (ViewHolder) view.getTag();
 
-        /* Image associated with the day*/
+        /* Image associated with the day */
         int viewType = getItemViewType(cursor.getPosition());
+
+        /* 'Today' has a coloured image associated with it, while the others don't */
         switch(viewType){
             case VIEW_TYPE_TODAY: viewHolder.iconView.setImageResource(Utility.getArtResourceForWeatherCondition(cursor.getInt(ForecastFragment.COL_WEATHER_CONDITION_ID)));
                 break;
@@ -111,8 +107,10 @@ public class ForecastAdapter extends CursorAdapter {
 
         /* Temperature Units */
         boolean isMetric = Utility.isMetric(context);
+
         double high = cursor.getDouble(ForecastFragment.COL_WEATHER_MAX_TEMP);
         viewHolder.highTempView.setText(Utility.formatTemperature(high, isMetric));
+
         double low = cursor.getDouble(ForecastFragment.COL_WEATHER_MIN_TEMP);
         viewHolder.lowTempView.setText(Utility.formatTemperature(low, isMetric));
     }
@@ -122,7 +120,7 @@ public class ForecastAdapter extends CursorAdapter {
     }
 
     /**
-     * Keeps a cache of the views to allow optimized recycling
+     * Keeps a cache of the views to allow optimized access to them
      */
     public static class ViewHolder {
         public final ImageView iconView;
