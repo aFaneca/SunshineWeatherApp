@@ -154,5 +154,17 @@ public class WeatherContract {
             else
                 return 0;
         }
+
+        /**
+         * Returns just the selection part of the weather query from a normalized today value.
+         * This is used to get a weather forecast from today's date. To make this easy to use
+         * in compound selection, we embed today's date as an argument in the query.
+         *
+         * @return The selection part of the weather query for today onwards
+         */
+        public static String getSqlSelectForTodayOnwards() {
+            long normalizedUtcNow = SunshineDateUtils.normalizeDate(System.currentTimeMillis());
+            return WeatherContract.WeatherEntry.COLUMN_DATE + " >= " + normalizedUtcNow;
+        }
     }
 }

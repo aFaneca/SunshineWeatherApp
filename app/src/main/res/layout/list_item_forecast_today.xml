@@ -4,6 +4,7 @@
   -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/colorPrimary"
@@ -23,27 +24,27 @@
             style="@style/text_condensed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Today, April 9"
             android:textAppearance="?android:textAppearanceLarge"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            tools:text="Today, April 9" />
 
         <TextView
             android:id="@+id/list_item_high_textview"
             style="@style/text_light"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="11º"
             android:textColor="@android:color/white"
-            android:textSize="@dimen/today_high_temp_text_size" />
+            android:textSize="@dimen/today_high_temp_text_size"
+            tools:text="11º" />
 
         <TextView
             android:id="@+id/list_item_low_textview"
             style="@style/text_light"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="7º"
             android:textColor="@android:color/white"
-            android:textSize="@dimen/today_low_temp_text_size" />
+            android:textSize="@dimen/today_low_temp_text_size"
+            tools:text="7º" />
     </LinearLayout>
 
     <LinearLayout
@@ -57,15 +58,15 @@
             android:id="@+id/list_item_icon"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:src="@mipmap/ic_launcher" />
+            tools:src="@mipmap/ic_launcher" />
 
         <TextView
             android:id="@+id/list_item_forecast_textview"
             style="@style/text_condensed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Clear"
             android:textAppearance="?android:textAppearanceLarge"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            tools:text="Clear" />
     </LinearLayout>
 </LinearLayout>

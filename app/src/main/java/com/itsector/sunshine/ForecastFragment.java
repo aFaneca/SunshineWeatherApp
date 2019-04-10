@@ -32,6 +32,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.itsector.sunshine.Data.WeatherContract;
+import com.itsector.sunshine.sync.SunshineService;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -145,8 +146,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         // Get a reference to the ListView, and attach this adapter to it.
         mListView = (ListView) rootView.findViewById(R.id.forecast_listview);
         mListView.setAdapter(mForecastAdapter);
-        // Automatically select the first element of the list
-
+        mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         // We'll call our MainActivity
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
@@ -256,13 +256,18 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     }
 
     /**
-     * Asks for the FetchWeatherTask task to refetch de weather data from the API,
-     * based on the currently selected location
+     * Starts the intent service that will update the weather information,
+     * refetching it from the API
      */
     private void updateWeather() {
-        FetchWeatherTask weatherTask = new FetchWeatherTask(getActivity());
+        /*FetchWeatherTask weatherTask = new FetchWeatherTask(getActivity());
         String location = Utility.getPreferredLocation(getActivity());
-        weatherTask.execute(location);
+        weatherTask.execute(location);*/
+
+        Intent intent = new Intent(getActivity(), SunshineService.class);
+        intent.putExtra(SunshineService.LOCATION_QUERY_EXTRA,
+                Utility.getPreferredLocation(getActivity()));
+        getActivity().startService(intent);
     }
 
     /**

@@ -15,6 +15,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.itsector.sunshine.sync.SunshineSyncUtils;
+
 public class MainActivity extends AppCompatActivity implements ForecastFragment.Callback{
     private Toolbar toolbar;
     private final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -47,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
                 .findFragmentById(R.id.fragment_forecast));
         /* Only use the today layout if we're not in the two pane layout */
         forecastFragment.setUseTodayLayout(!mTwoPane);
+        SunshineSyncUtils.initialize(this);
     }
 
 
@@ -73,9 +76,9 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
     private void openPreferredLocationInMap() {
         String location = Utility.getPreferredLocation(this);
 
-        // Using the URI scheme for showing a location found on a map.  This super-handy
-        // intent can is detailed in the "Common Intents" page of Android's developer site:
-        // http://developer.android.com/guide/components/intents-common.html#Maps
+        /* Using the URI scheme for showing a location found on a map.  This super-handy
+         intent can is detailed in the "Common Intents" page of Android's developer site:
+         http://developer.android.com/guide/components/intents-common.html#Maps */
         Uri geoLocation = Uri.parse("geo:0,0?").buildUpon()
                 .appendQueryParameter("q", location)
                 .build();
