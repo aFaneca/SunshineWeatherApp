@@ -15,24 +15,14 @@ import com.firebase.jobdispatcher.JobService;
 import com.firebase.jobdispatcher.RetryStrategy;
 import com.itsector.sunshine.Utility;
 
-// COMPLETED (2) Make sure you've imported the jobdispatcher.JobService, not job.JobService
 
-// COMPLETED (3) Add a class called SunshineFirebaseJobService that extends jobdispatcher.JobService
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class SunshineFirebaseJobService extends JobService {
 
-//  COMPLETED (4) Declare an ASyncTask field called mFetchWeatherTask
     private AsyncTask<Void, Void, Void> mFetchWeatherTask;
 
-//  COMPLETED (5) Override onStartJob and within it, spawn off a separate ASyncTask to sync weather data
     /**
-     * The entry point to your Job. Implementations should offload work to another thread of
-     * execution as soon as possible.
-     *
-     * This is called by the Job Dispatcher to tell us we should start our job. Keep in mind this
-     * method is run on the application's main thread, so we need to offload work to a background
-     * thread.
-     *
+     * Starts the task that syncs the app with updated weather data.
      * @return whether there is more work remaining.
      */
     @Override
@@ -49,7 +39,7 @@ public class SunshineFirebaseJobService extends JobService {
 
             @Override
             protected void onPostExecute(Void aVoid) {
-                //  COMPLETED (6) Once the weather data is sync'd, call jobFinished with the appropriate arguements
+                /* Declare that the job was completed */
                 jobFinished(jobParameters, false);
             }
         };
@@ -58,7 +48,6 @@ public class SunshineFirebaseJobService extends JobService {
         return true;
     }
 
-//  COMPLETED (7) Override onStopJob, cancel the ASyncTask if it's not null and return true
     /**
      * Called when the scheduling engine has decided to interrupt the execution of a running job,
      * most likely because the runtime constraints associated with the job are no longer satisfied.

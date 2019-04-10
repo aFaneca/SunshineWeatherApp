@@ -9,9 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-
 import com.firebase.jobdispatcher.Constraint;
 import com.firebase.jobdispatcher.Driver;
 import com.firebase.jobdispatcher.FirebaseJobDispatcher;
@@ -19,6 +17,7 @@ import com.firebase.jobdispatcher.GooglePlayDriver;
 import com.firebase.jobdispatcher.Job;
 import com.firebase.jobdispatcher.Lifetime;
 import com.firebase.jobdispatcher.Trigger;
+
 import com.itsector.sunshine.Data.WeatherContract;
 
 import java.util.concurrent.TimeUnit;
@@ -28,13 +27,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class SunshineSyncUtils {
     /*
-     * Interval at which to sync with the weather. Use TimeUnit for convenience, rather than
-     * writing out a bunch of multiplication ourselves and risk making a silly mistake.
+     * Interval at which to sync with the weather
      */
     private static final int SYNC_INTERVAL_HOURS = 3;
     private static final int SYNC_INTERVAL_SECONDS = (int) TimeUnit.HOURS.toSeconds(SYNC_INTERVAL_HOURS);
     private static final int SYNC_FLEXTIME_SECONDS = SYNC_INTERVAL_SECONDS / 3;
 
+    /* Has the sync been initialized? */
     private static boolean sInitialized;
 
     private static final String SUNSHINE_SYNC_TAG = "sunshine-sync";
@@ -82,7 +81,7 @@ public class SunshineSyncUtils {
                         SYNC_INTERVAL_SECONDS,
                         SYNC_INTERVAL_SECONDS + SYNC_FLEXTIME_SECONDS))
                 /*
-                 * If a Job with the tag with provided already exists, this new job will replace
+                 * If a Job with the tag provided already exists, this new job will replace
                  * the old one.
                  */
                 .setReplaceCurrent(true)
@@ -101,6 +100,7 @@ public class SunshineSyncUtils {
         /* Schedule the recurring job */
         scheduleFirebaseJobDispatcherSync(context);
 
+        /* Queries the cursor to check whether or not the DB already has data */
         Thread checkIfDBIsEmpty = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -124,21 +124,8 @@ public class SunshineSyncUtils {
                         selectionStatement,
                         null,
                         null);
-                /*
-                 * A Cursor object can be null for various different reasons. A few are
-                 * listed below.
-                 *
-                 *   1) Invalid URI
-                 *   2) A certain ContentProvider's query method returns null
-                 *   3) A RemoteException was thrown.
-                 *
-                 * Bottom line, it is generally a good idea to check if a Cursor returned
-                 * from a ContentResolver is null.
-                 *
-                 * If the Cursor was null OR if it was empty, we need to sync immediately to
-                 * be able to display data to the user.
-                 */
-                //  COMPLETED (6) If it is empty or we have a null Cursor, sync the weather now!
+
+                /* If it is empty or we have a null Cursor, sync the weather now */
                 if (null == cursor || cursor.getCount() == 0) {
                     startImmediateSync(context);
                 }
@@ -160,7 +147,6 @@ public class SunshineSyncUtils {
      * @param context The Context used to start the IntentService for the sync.
      */
     public static void startImmediateSync(@NonNull final Context context) {
-//      COMPLETED (11) Within that method, start the SunshineSyncIntentService
         Intent intentToSyncImmediately = new Intent(context, SunshineService.class);
         context.startService(intentToSyncImmediately);
     }

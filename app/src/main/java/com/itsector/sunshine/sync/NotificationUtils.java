@@ -39,21 +39,12 @@ public class NotificationUtils {
             WeatherContract.WeatherEntry.COLUMN_MIN_TEMP,
     };
 
-    /*
-     * We store the indices of the values in the array of Strings above to more quickly be able
-     * to access the data from our query. If the order of the Strings above changes, these
-     * indices must be adjusted to match the order of the Strings.
-     */
+    /* Index of each of the columns referred above */
     public static final int INDEX_WEATHER_ID = 0;
     public static final int INDEX_MAX_TEMP = 1;
     public static final int INDEX_MIN_TEMP = 2;
 
-    /*
-     * This notification ID can be used to access our notification after we've displayed it. This
-     * can be handy when we need to cancel the notification, or perhaps update it. This number is
-     * arbitrary and can be set to whatever you like. 3004 is in no way significant.
-     */
-//  COMPLETED (1) Create a constant int value to identify the notification
+    /* Constant int value to identify the notification */
     private static final int WEATHER_NOTIFICATION_ID = 3004;
 
     /**
@@ -63,14 +54,11 @@ public class NotificationUtils {
      */
     public static void notifyUserOfNewWeather(Context context) {
 
-        /* Build the URI for today's weather in order to show up to date data in notification */
+        /* Build the URI for today's weather in order to show updated data in notification */
         Uri todaysWeatherUri = WeatherContract.WeatherEntry
                 .buildWeatherLocationWithDate(Utility.getPreferredLocation(context), System.currentTimeMillis());
 
-        /*
-         * The MAIN_FORECAST_PROJECTION array passed in as the second parameter is defined in our WeatherContract
-         * class and is used to limit the columns returned in our cursor.
-         */
+        /* Gets a cursor with the data */
         Cursor todayWeatherCursor = context.getContentResolver().query(
                 todaysWeatherUri,
                 WEATHER_NOTIFICATION_PROJECTION,
@@ -89,6 +77,8 @@ public class NotificationUtils {
             double high = todayWeatherCursor.getDouble(INDEX_MAX_TEMP);
             double low = todayWeatherCursor.getDouble(INDEX_MIN_TEMP);
 
+
+            /* Associate an image resource with this item, according to its weather ID*/
             Resources resources = context.getResources();
             int largeArtResourceId = Utility.
                     getArtResourceForWeatherCondition(weatherId);
@@ -105,28 +95,21 @@ public class NotificationUtils {
             int smallArtResourceId = Utility
                     .getIconResourceForWeatherCondition(weatherId);
 
-            /*
-             * NotificationCompat Builder is a very convenient way to build backward-compatible
-             * notifications. In order to use it, we provide a context and specify a color for the
-             * notification, a couple of different icons, the title for the notification, and
-             * finally the text of the notification, which in our case in a summary of today's
-             * forecast.
-             */
-
-//          COMPLETED (6) Get a reference to the NotificationManager
+            /* Get a reference to the NotificationManager */
             NotificationManager notificationManager = (NotificationManager)
                     context.getSystemService(Context.NOTIFICATION_SERVICE);
 
             NotificationCompat.Builder notificationBuilder;
 
             /* Android Oreo requires the creation of a notification channel
-            before we can send out notifs */
+            before we can send out notifications */
             if (Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 String CHANNEL_ID = "" + (R.string.notif_main_channel_id);
                 String channelName = "" + R.string.notif_main_channel_name;
                 String channelDescription = "" + R.string.notif_main_channel_description;
                 int importance = NotificationManager.IMPORTANCE_HIGH;
 
+                /* Create the notification channel*/
                 NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, channelName, importance);
                 mChannel.setDescription(channelDescription);
                 mChannel.enableLights(true);
@@ -136,6 +119,7 @@ public class NotificationUtils {
 
                 notificationManager.createNotificationChannel(mChannel);
 
+                /* Build the notification instance */
                 notificationBuilder = new NotificationCompat.Builder(context, CHANNEL_ID)
                         .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                         .setSmallIcon(smallArtResourceId)
@@ -144,6 +128,7 @@ public class NotificationUtils {
                         .setContentText(notificationText)
                         .setAutoCancel(true);
             }else{
+                /* Build the notification instance */
                 notificationBuilder = new NotificationCompat.Builder(context)
                         .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
                         .setSmallIcon(smallArtResourceId)
@@ -152,34 +137,29 @@ public class NotificationUtils {
                         .setContentText(notificationText)
                         .setAutoCancel(true);
             }
-
-            //          COMPLETED (2) Use NotificationCompat.Builder to begin building the notification
-
-
-//          COMPLETED (3) Create an Intent with the proper URI to start the DetailActivity
             /*
-             * This Intent will be triggered when the user clicks the notification. In our case,
+             * This Intent will be triggered when the user clicks the notification. In this case,
              * we want to open Sunshine to the DetailActivity to display the newly updated weather.
              */
             Intent detailIntentForToday = new Intent(context, DetailActivity.class);
+            /* We have to pass the URI for today's weather,
+             * so that the activity can recover and display that data */
             detailIntentForToday.setData(todaysWeatherUri);
 
-//          COMPLETED (4) Use TaskStackBuilder to create the proper PendingINtent
+            /* Create the pending intent */
             TaskStackBuilder taskStackBuilder = TaskStackBuilder.create(context);
             taskStackBuilder.addNextIntentWithParentStack(detailIntentForToday);
             PendingIntent resultPendingIntent = taskStackBuilder
                     .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
-//          COMPLETED (5) Set the content Intent of the NotificationBuilder
+            /* Set the content Intent of the NotificationBuilder
+            * The notificationBuilder will use this intent to direct the user back into the app
+            * once he clicks in the notification. */
             notificationBuilder.setContentIntent(resultPendingIntent);
 
-
-
-//          COMPLETED (7) Notify the user with the ID WEATHER_NOTIFICATION_ID
-            /* WEATHER_NOTIFICATION_ID allows you to update or cancel the notification later on */
+            /* Send the notification */
             notificationManager.notify(WEATHER_NOTIFICATION_ID, notificationBuilder.build());
 
-//          COMPLETED (8) Save the time at which the notification occurred using SunshinePreferences
             /*
              * Since we just showed a notification, save the current time. That way, we can check
              * next time the weather is refreshed if we should show another notification.
@@ -187,7 +167,6 @@ public class NotificationUtils {
             SunshinePreferences.saveLastNotificationTime(context, System.currentTimeMillis());
         }
 
-        /* Always close your cursor when you're done with it to avoid wasting resources. */
         todayWeatherCursor.close();
     }
 
@@ -195,10 +174,9 @@ public class NotificationUtils {
      * Constructs and returns the summary of a particular day's forecast using various utility
      * methods and resources for formatting. This method is only used to create the text for the
      * notification that appears when the weather is refreshed.
-     * <p>
+     *
      * The String returned from this method will look something like this:
-     * <p>
-     * Forecast: Sunny - High: 14°C Low 7°C
+     *                              Forecast: Sunny - High: 14°C Low 7°C
      *
      * @param context   Used to access utility methods and resources
      * @param weatherId ID as determined by Open Weather Map

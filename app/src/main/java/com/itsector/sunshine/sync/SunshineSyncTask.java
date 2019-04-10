@@ -4,7 +4,6 @@
  */
 package com.itsector.sunshine.sync;
 
-import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
@@ -36,15 +35,12 @@ public class SunshineSyncTask {
 
     /**
      * Performs the network request for updated weather, parses the JSON from that request, and
-     * inserts the new weather information into our ContentProvider. Will notify the user that new
-     * weather has been loaded if the user hasn't been notified of the weather within the last day
-     * AND they haven't disabled notifications in the preferences screen.
+     * inserts the new weather information into the ContentProvider. Will notify the user that new
+     * weather has been loaded if the user hasn't been notified of the weather within the last day.
      *
      * @param context Used to access utility methods and the ContentResolver
      */
     synchronized public static void syncWeather(Context context, String locationQuery) {
-        // These two need to be declared outside the try/catch
-        // so that they can be closed in the finally block.
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
 
@@ -56,9 +52,7 @@ public class SunshineSyncTask {
         int numDays = 14;
 
         try {
-            // Construct the URL for the OpenWeatherMap query
-            // Possible parameters are avaiable at OWM's forecast API page, at
-            // http://openweathermap.org/API#forecast
+            /* Generate the URL for the API query */
             final String FORECAST_BASE_URL =
                     "http://api.openweathermap.org/data/2.5/forecast?";
             final String QUERY_PARAM = "q";
@@ -67,6 +61,7 @@ public class SunshineSyncTask {
             final String DAYS_PARAM = "cnt";
             final String APPID_PARAM = "APPID";
 
+            /* Builds the full URI from the base URL*/
             Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
                     .appendQueryParameter(QUERY_PARAM, locationQuery)
                     .appendQueryParameter(FORMAT_PARAM, format)
@@ -75,27 +70,25 @@ public class SunshineSyncTask {
                     .appendQueryParameter(APPID_PARAM, BuildConfig.OPEN_WEATHER_MAP_API_KEY)
                     .build();
 
+            /* Get the full URL */
             URL url = new URL(builtUri.toString());
 
-            // Create the request to OpenWeatherMap, and open the connection
+            /* Create the request to OpenWeatherMap, and open the connection */
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
             urlConnection.connect();
 
-            // Read the input stream into a String
+            /* Read the input stream into a String */
             InputStream inputStream = urlConnection.getInputStream();
             StringBuffer buffer = new StringBuffer();
             if (inputStream == null) {
-                // Nothing to do.
                 return;
             }
             reader = new BufferedReader(new InputStreamReader(inputStream));
 
             String line;
             while ((line = reader.readLine()) != null) {
-                // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
-                // But it does make debugging a *lot* easier if you print out the completed
-                // buffer for debugging.
+                /* Add every line to the buffer */
                 buffer.append(line + "\n");
             }
 
@@ -103,7 +96,9 @@ public class SunshineSyncTask {
                 // Stream was empty.  No point in parsing.
                 return;
             }
+            /* Convert the buffer to a string */
             forecastJsonStr = buffer.toString();
+
             getWeatherDataFromJson(context, forecastJsonStr, locationQuery);
         } catch (IOException e) {
             Log.e(LOG_TAG, "Error ", e);
@@ -128,49 +123,35 @@ public class SunshineSyncTask {
         boolean notificationsEnabled = SunshinePreferences.areNotificationsEnabled(context);
 
         /*
-         * If the last notification was shown was more than 1 day ago, we want to send
-         * another notification to the user that the weather has been updated. Remember,
-         * it's important that you shouldn't spam your users with notifications.
+         * If the last notification was shown was more than 1 day ago, send
+         * another notification to the user that the weather has been updated.
          */
         long timeSinceLastNotification = SunshinePreferences
                 .getEllapsedTimeSinceLastNotification(context);
 
         boolean oneDayPassedSinceLastNotification = false;
 
-//              COMPLETED (14) Check if a day has passed since the last notification
+        /* Check if a day has passed since the last notification */
         if (timeSinceLastNotification >= DateUtils.DAY_IN_MILLIS) {
             oneDayPassedSinceLastNotification = true;
         }
 
-        /*
-         * We only want to show the notification if the user wants them shown and we
-         * haven't shown a notification in the past day.
-         */
-//              COMPLETED (15) If more than a day have passed and notifications are enabled, notify the user
+        /* If more than a day have passed and notifications are enabled, notify the user */
         if (notificationsEnabled && oneDayPassedSinceLastNotification) {
             NotificationUtils.notifyUserOfNewWeather(context);
         }
-
     }
 
 
     /**
      * Take the String representing the complete forecast in JSON Format and
      * pull out the data we need to construct the Strings needed for the wireframes.
-     * <p>
-     * Fortunately parsing is easy:  constructor takes the JSON string and converts it
-     * into an Object hierarchy for us.
      */
     private static void getWeatherDataFromJson(Context context, String forecastJsonStr,
                                         String locationSetting)
             throws JSONException {
 
-        // Now we have a String representing the complete forecast in JSON Format.
-        // Fortunately parsing is easy:  constructor takes the JSON string and converts it
-        // into an Object hierarchy for us.
-
-        // These are the names of the JSON objects that need to be extracted.
-
+        /* Names of the JSON objects we need to extract */
         // Location information
         final String OWM_CITY = "city";
         final String OWM_CITY_NAME = "name";
@@ -227,7 +208,7 @@ public class SunshineSyncTask {
             Time dayTime = new Time();
             dayTime.setToNow();
 
-            // we start at the day returned by local time. Otherwise this is a mess.
+            // we start at the day returned by local time
             int julianStartDay = Time.getJulianDay(System.currentTimeMillis(), dayTime.gmtoff);
 
             // now we work exclusively in UTC
@@ -245,35 +226,38 @@ public class SunshineSyncTask {
                 double low;
 
                 String description;
-                int weatherId;
+                int weatherID;
 
                 // Get the JSON object representing the day
                 JSONObject dayForecast = weatherArray.getJSONObject(i);
 
-                // Cheating to convert this to UTC time, which is what we want anyhow
+                // Convert the date to UTC time
                 dateTime = dayTime.setJulianDay(julianStartDay + i);
-                // Description is in a child array called "weather", which is 1 element long.
-                // That element also contains a weather code.
+
+                /* Get the weather object */
                 JSONObject weatherObject =
                         dayForecast.getJSONArray(OWM_WEATHER).getJSONObject(0);
-                /*description = weatherObject.getString(OWM_DESCRIPTION);*/
-                weatherId = weatherObject.getInt(OWM_WEATHER_ID);
-                description = Utility.getStringForWeatherCondition(context, weatherId);
 
-                // Temperatures are in a child object called "main"
+                /* Get the weatherID & description from inside the weather Object */
+                weatherID = weatherObject.getInt(OWM_WEATHER_ID);
+                description = Utility.getStringForWeatherCondition(context, weatherID);
+
+                /* Temperatures are in a child object called "main" (OWM_TEMPERATURE) */
                 JSONObject temperatureObject = dayForecast.getJSONObject(OWM_TEMPERATURE);
+
                 high = temperatureObject.getDouble(OWM_MAX);
                 low = temperatureObject.getDouble(OWM_MIN);
                 pressure = temperatureObject.getDouble(OWM_PRESSURE);
                 humidity = temperatureObject.getInt(OWM_HUMIDITY);
 
-                // Wind data is in a child object called "wind"
+                /* Wind data is in a child object called "wind" (OWM_WIND) */
                 JSONObject windObject = dayForecast.getJSONObject(OWM_WIND);
                 windSpeed = windObject.getDouble(OWM_WINDSPEED);
                 windDirection = windObject.getDouble(OWM_WIND_DIRECTION);
 
                 ContentValues weatherValues = new ContentValues();
 
+                /* Compile all the data received in pair-key format ([COLUMN_NAME] - [VALUE]) */
                 weatherValues.put(WeatherContract.WeatherEntry.COLUMN_LOC_KEY, locationId);
                 weatherValues.put(WeatherContract.WeatherEntry.COLUMN_DATE, dateTime);
                 weatherValues.put(WeatherContract.WeatherEntry.COLUMN_HUMIDITY, humidity);
@@ -283,16 +267,21 @@ public class SunshineSyncTask {
                 weatherValues.put(WeatherContract.WeatherEntry.COLUMN_MAX_TEMP, high);
                 weatherValues.put(WeatherContract.WeatherEntry.COLUMN_MIN_TEMP, low);
                 weatherValues.put(WeatherContract.WeatherEntry.COLUMN_SHORT_DESC, description);
-                weatherValues.put(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID, weatherId);
+                weatherValues.put(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID, weatherID);
 
                 cVVector.add(weatherValues);
             }
 
             int inserted = 0;
-            // add to database
+
+            /* Add the data in the vector to the DB */
             if (cVVector.size() > 0) {
                 ContentValues[] cvArray = new ContentValues[cVVector.size()];
+
+                /* Store all the data in the vector inside the cvArray*/
                 cVVector.toArray(cvArray);
+
+                /* Returns the number of inserted rows */
                 inserted = context.getContentResolver().bulkInsert(WeatherContract.WeatherEntry.CONTENT_URI, cvArray);
 
                 /* delete data that is 1+ days old */
@@ -332,18 +321,16 @@ public class SunshineSyncTask {
             int locationIdIndex = locationCursor.getColumnIndex(WeatherContract.LocationEntry._ID);
             locationId = locationCursor.getLong(locationIdIndex);
         } else {
-            // Now that the content provider is set up, inserting rows of data is pretty simple.
-            // First create a ContentValues object to hold the data you want to insert.
+            /* Create a ContentValues object to hold the data you want to insert. */
             ContentValues locationValues = new ContentValues();
 
-            // Then add the data, along with the corresponding name of the data type,
-            // so the content provider knows what kind of value is being inserted.
+            /* Compile all the data received in pair-key format ([COLUMN_NAME] - [VALUE]) */
             locationValues.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME, cityName);
             locationValues.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
             locationValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, lat);
             locationValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LONG, lon);
 
-            // Finally, insert location data into the database.
+            /* Insert location data into the database. */
             Uri insertedUri = context.getContentResolver().insert(
                     WeatherContract.LocationEntry.CONTENT_URI,
                     locationValues
@@ -354,7 +341,6 @@ public class SunshineSyncTask {
         }
 
         locationCursor.close();
-        // Wait, that worked?  Yes!
         return locationId;
     }
 }
