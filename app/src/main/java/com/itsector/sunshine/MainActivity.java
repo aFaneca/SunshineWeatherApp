@@ -10,19 +10,16 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 
 import com.itsector.sunshine.sync.SunshineSyncUtils;
 
-public class MainActivity extends AppCompatActivity implements ForecastFragment.Callback{
-    private Toolbar toolbar;
+public class MainActivity extends AppCompatActivity implements ForecastFragment.Callback {
     private final String LOG_TAG = MainActivity.class.getSimpleName();
     private static final String DETAILFRAGMENT_TAG = "DFTAG";
 
-    private boolean mTwoPane;
+    private Boolean mIsTwoPaneLayout;
     private String mLocation;
 
     @Override
@@ -31,36 +28,33 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
         mLocation = Utility.getPreferredLocation(this);
 
         setContentView(R.layout.activity_main);
-        /*toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);*/
-        if (findViewById(R.id.weather_detail_container) != null) {
+
+        if (isTwoPaneLayout()) {
             /* If this view exists in the layout, it means we're dealing with a tablet
-            *  which means we'll have a two pane layout*/
-            mTwoPane = true;
+                which means we'll have a two pane layout*/
+            mIsTwoPaneLayout = true;
 
         } else {
-            mTwoPane = false;
+            mIsTwoPaneLayout = false;
 
             /* Removes unnecessary shadows below the action bar*/
             getSupportActionBar().setElevation(0f);
         }
 
-        ForecastFragment forecastFragment =  ((ForecastFragment)getSupportFragmentManager()
+        ForecastFragment forecastFragment = ((ForecastFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.fragment_forecast));
         /* Only use the today layout if we're not in the two pane layout */
-        forecastFragment.setUseTodayLayout(!mTwoPane);
+        forecastFragment.setUseTodayLayout(!mIsTwoPaneLayout);
         SunshineSyncUtils.initialize(this);
     }
 
-
+    /**
+     * Handles options menu item selection
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
@@ -73,17 +67,23 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Makes an implicit intent for an external app that can show the
+     * location on a map (e.g. Google Maps)
+     * <p>
+     * If none is found, nothing happens
+     */
     private void openPreferredLocationInMap() {
         String location = Utility.getPreferredLocation(this);
 
-        /* Using the URI scheme for showing a location found on a map.  This super-handy
-         intent can is detailed in the "Common Intents" page of Android's developer site:
-         http://developer.android.com/guide/components/intents-common.html#Maps */
+        /* Building the URI */
         Uri geoLocation = Uri.parse("geo:0,0?").buildUpon()
                 .appendQueryParameter("q", location)
                 .build();
 
+        /* Creating the intent */
         Intent intent = new Intent(Intent.ACTION_VIEW);
+        /* Associate the URI with the intent */
         intent.setData(geoLocation);
 
         if (intent.resolveActivity(getPackageManager()) != null) {
@@ -96,15 +96,16 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
     @Override
     protected void onResume() {
         super.onResume();
-        String location = Utility.getPreferredLocation( this );
-        // update the location in our second pane using the fragment manager
+        String location = Utility.getPreferredLocation(this);
+
+        /* If the location changed, update it in both fragments */
         if (location != null && !location.equals(mLocation)) {
-            ForecastFragment ff = (ForecastFragment)getSupportFragmentManager().findFragmentById(R.id.fragment_forecast);
-            if ( null != ff ) {
+            ForecastFragment ff = (ForecastFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_forecast);
+            if (null != ff) {
                 ff.onLocationChanged();
             }
-            DetailActivityFragment df = (DetailActivityFragment)getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
-            if ( null != df ) {
+            DetailActivityFragment df = (DetailActivityFragment) getSupportFragmentManager().findFragmentByTag(DETAILFRAGMENT_TAG);
+            if (null != df) {
                 df.onLocationChanged(location);
             }
             mLocation = location;
@@ -113,23 +114,39 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
 
     @Override
     public void onItemSelected(Uri contentUri) {
-        if (mTwoPane) {
-            // In two-pane mode, show the detail view in this activity by
-            // adding or replacing the detail fragment using a
-            // fragment transaction.
+        if (isTwoPaneLayout()) {
+            /* Send the required info in a bundle to the fragment */
             Bundle args = new Bundle();
             args.putParcelable(DetailActivityFragment.DETAIL_URI, contentUri);
 
             DetailActivityFragment fragment = new DetailActivityFragment();
             fragment.setArguments(args);
 
+            /* Replace the current fragment for the new one selected */
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.weather_detail_container, fragment, DETAILFRAGMENT_TAG)
                     .commit();
         } else {
+            /* Send the required info as extra data to the intent */
             Intent intent = new Intent(this, DetailActivity.class)
                     .setData(contentUri);
             startActivity(intent);
         }
+    }
+
+    /**
+     * Checks wether the device is using the two-paned layout or not.
+     * Will try to get that info from the member var mIsTwoPaneLayout (to avoid extra work)
+     * If not defined, will look up the answer itself and return it
+     *
+     * @return boolean
+     */
+    private boolean isTwoPaneLayout() {
+        /* if the var is already defined, just return it*/
+        if (mIsTwoPaneLayout == null) {
+            mIsTwoPaneLayout = (findViewById(R.id.weather_detail_container) != null);
+        }
+
+        return mIsTwoPaneLayout;
     }
 }
