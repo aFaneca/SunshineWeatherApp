@@ -8,10 +8,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="?attr/actionBarSize"
         android:orientation="horizontal"
-        android:paddingTop="16dp">
+        android:paddingTop="@dimen/details_wide_padding_top">
 
         <LinearLayout
-            android:layout_width="160dp"
+            android:layout_width="@dimen/details_wide_left_side_width"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
@@ -38,7 +38,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
+            android:layout_marginLeft="@dimen/details_wide_right_side_margin_left"
             android:orientation="vertical">
 
             <TextView

@@ -14,7 +14,7 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="60dp"
+        android:layout_marginLeft="@dimen/list_item_today_margin_left"
         android:layout_weight="7"
         android:gravity="left"
         android:orientation="vertical">
@@ -56,8 +56,8 @@
 
         <ImageView
             android:id="@+id/list_item_icon"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
+            android:layout_width="@dimen/list_item_today_icon_width"
+            android:layout_height="@dimen/list_item_today_icon_height"
             tools:src="@mipmap/ic_launcher" />
 
         <TextView

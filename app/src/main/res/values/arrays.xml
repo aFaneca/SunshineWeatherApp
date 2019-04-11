@@ -5,10 +5,12 @@
   -->
 
 <resources>
+    <!-- For the Settings Activity (Preference Activity) -->
     <string-array name="pref_unit_entries">
         <item>@string/pref_entry_metric_units</item>
         <item>@string/pref_entry_imperial_units</item>
     </string-array>
+
     <string-array name="pref_unit_entry_values">
         <item>@string/pref_units_metric</item>
         <item>@string/pref_units_imperial</item>

@@ -235,6 +235,10 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
      * Make sure to only call this method after the cursor has fully loaded (e.g. onLoadFinihed)
      */
     private void autoSelectFirstItem() {
+        /* If there's no items in this list, do nothing */
+        if(mListView.getAdapter().getCount() == 0) return;
+
+        /* Perform a click in the first item */
         mListView.performItemClick(mListView.getAdapter().getView(0, null, null),
                 0,
                 mListView.getAdapter().getItemId(0));

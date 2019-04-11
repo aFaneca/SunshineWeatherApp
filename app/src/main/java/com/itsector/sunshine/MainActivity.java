@@ -31,9 +31,8 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
 
         if (isTwoPaneLayout()) {
             /* If this view exists in the layout, it means we're dealing with a tablet
-                which means we'll have a two pane layout*/
+                which means we'll have a two pane layout */
             mIsTwoPaneLayout = true;
-
         } else {
             mIsTwoPaneLayout = false;
 
